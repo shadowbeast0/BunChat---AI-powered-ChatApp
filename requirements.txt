@@ -1,0 +1,6 @@
+flask>=3.0
+transformers>=4.36
+torch
+sentence-transformers>=2.2
+requests>=2.31
+python-dotenv>=1.0

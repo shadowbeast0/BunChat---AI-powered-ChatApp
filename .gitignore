@@ -1,0 +1,31 @@
+# Node
+node_modules/
+package-lock.json
+npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# Python virtual environment
+.venv/
+
+# IDE
+.vscode/
+
+.env
+storage/
+bunchat.db
+bunchat.db-shm
+bunchat.db-wal
+data.json
+users.json
+groups.json
+
+
+# Zip files
+*.zip

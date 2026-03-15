@@ -1,0 +1,735 @@
+﻿doctype html
+html(lang="en")
+  head
+    meta(charset="utf-8")
+    meta(name="viewport" content="width=device-width, initial-scale=1")
+    title BunChat
+    link(rel="icon" type="image/png" href="/server.pfp.png")
+    link(rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css")
+    link(rel="stylesheet" href="/style.css")
+  body
+    //- == Auth screen ==
+    #authScreen
+      .auth-card
+        .auth-header
+          i.fa-solid.fa-comments.auth-logo
+          h1 BunChat
+          p Chat with groups and direct messages
+        form#authForm(autocomplete="off")
+          input#usernameInput(type="text" placeholder="Username" required)
+          input#passwordInput(type="password" placeholder="Password" required)
+          .auth-btns
+            button#loginBtn.btn.btn-primary(type="button") Log In
+            button#registerBtn.btn.btn-outline(type="button") Register
+          p#authMsg
+
+    //- == App shell (WhatsApp layout) ==
+    #appShell(style="display:none")
+      //- Vertical nav rail
+      .nav-rail
+        button#leftExpandBtn.icon-btn.rail-toggle-btn(title="Expand sidebar" data-tooltip="Expand")
+          i.fa-solid.fa-chevron-right
+        button.tab-btn.active(data-tab="groups" data-tooltip="Groups")
+          i.fa-solid.fa-user-group
+          span Groups
+          span.tab-badge(id="tabBadgeGroups")
+        button.tab-btn(data-tab="dms" data-tooltip="Direct")
+          i.fa-solid.fa-user
+          span Direct
+          span.tab-badge(id="tabBadgeDms")
+        button.tab-btn(data-tab="rooms" data-tooltip="Rooms")
+          i.fa-solid.fa-hashtag
+          span Rooms
+          span.tab-badge(id="tabBadgeRooms")
+        button.tab-btn(data-tab="posts" data-tooltip="Posts")
+          i.fa-solid.fa-newspaper
+          span Posts
+          span.tab-badge(id="tabBadgePosts")
+        button#typingTabBtn.tab-btn(data-tab="typing" data-tooltip="Typing" style="display:none")
+          i.fa-solid.fa-keyboard
+          span Typing
+        button#hiddenTabBtn.tab-btn(data-tab="hidden" data-tooltip="Hidden" style="display:none")
+          i.fa-solid.fa-eye-slash
+          span Hidden
+
+      //- Left panel: conversations
+      .panel-left
+        .panel-left-header
+          .header-avatar
+            span#headerAvatar.avatar-sm
+            span#headerStatus.status-dot
+          span#headerUsername
+          button#leftCollapseBtn.icon-btn(title="Collapse")
+            i.fa-solid.fa-chevron-left
+          button#settingsBtn.icon-btn(title="Settings")
+            i.fa-solid.fa-gear
+          button#logoutBtn.icon-btn(title="Logout")
+            i.fa-solid.fa-right-from-bracket
+        //- Group list with FAB
+        #groupsTab.tab-content.active
+          p#groupActionMsg
+          .conv-list#groupConvList
+          //- Floating + button (WhatsApp style)
+          button#groupFab.fab-btn(title="Create or Join Group")
+            i.fa-solid.fa-plus
+
+        //- DM list
+        #dmsTab.tab-content
+          .dm-search
+            i.fa-solid.fa-magnifying-glass
+            input#dmSearchInput(type="text" placeholder="Search users")
+          .conv-list#dmConvList
+
+        //- Rooms tab
+        #roomsTab.tab-content
+          p#roomActionMsg
+          .conv-list#roomConvList
+          button#roomFab.fab-btn(title="Create or Search Rooms")
+            i.fa-solid.fa-plus
+
+        //- Posts tab
+        #postsTab.tab-content
+          .posts-sidebar-header
+            span Posts Feed
+            button#newPostFab.fab-btn-sm(title="Create Post")
+              i.fa-solid.fa-pen-to-square
+          .conv-list#postsSidebarList
+
+        //- Hidden typing tab (revealed by Konami code)
+        #typingTab.tab-content
+          .conv-section Konami mode unlocked
+          p#typingUnlockMsg(style="padding:0 16px 10px;color:var(--text-secondary)") Open the typing arena and track top scores here.
+          .action-row(style="padding:0 16px")
+            button#typingOpenBtn.btn.btn-primary.btn-sm(type="button") Open Typing Mode
+          details#typingSidebarLeaderboardWrap(style="margin:12px 16px")
+            summary Leaderboard
+            ol#typingSidebarLeaderboard
+
+        //- Hidden chats tab (revealed by typing secret sequence)
+        #hiddenTab.tab-content
+          .conv-section
+            i.fa-solid.fa-eye-slash
+            |  Hidden Chats
+          p#hiddenTabMsg(style="padding:0 16px 10px;color:var(--text-secondary)") Your hidden groups and DMs appear here. Type the sequence again to hide this tab.
+          .conv-list#hiddenGroupList
+          .conv-list#hiddenDmList
+
+      //- Right panel: chat
+      .panel-right
+        #noChatPlaceholder.placeholder-screen
+          i.fa-solid.fa-comments.placeholder-icon
+          p Select a group or user to start chatting
+
+        //- Posts feed (full right panel)
+        #postsFeedArea(style="display:none")
+          .posts-feed-header
+            i.fa-solid.fa-newspaper
+            span Posts Feed
+            button#createPostBtn.btn.btn-primary.btn-sm(type="button")
+              i.fa-solid.fa-plus
+              |  New Post
+          .posts-feed#postsFeed
+
+        #chatArea(style="display:none")
+          .chat-header
+            span#chatAvatar.avatar-sm
+            .chat-info
+              span#chatName
+              span#chatSub
+            .mss-bar-container(title="Mental-State Score")
+              .mss-bar#mssBar
+                .mss-fill#mssFill(style="width:100%")
+              span.mss-label#mssLabel 100
+            button#clearChatBtn.icon-btn(title="Clear chat")
+              i.fa-solid.fa-broom
+            button#chatInfoBtn.icon-btn(title="Info")
+              i.fa-solid.fa-circle-info
+          .chat-messages#chatMessages
+          #photoPreviewBar(style="display:none")
+            img#previewImg
+            span#previewLabel(style="display:none")
+            button#cancelPreview.icon-btn
+              i.fa-solid.fa-xmark
+          .chat-input
+            .chat-extra-controls
+              span.chat-spoiler-hint Use /* text */ for spoiler text and /* filename.ext */ for media spoiler.
+            #replyContextBar(style="display:none")
+              .reply-text
+                strong#replyContextName
+                span#replyContextSnippet
+              button#cancelReplyBtn.icon-btn(type="button" title="Cancel reply")
+                i.fa-solid.fa-xmark
+            #mentionSuggest(style="display:none")
+            button#attachBtn.icon-btn(title="Attach photo")
+              i.fa-solid.fa-paperclip
+            input#photoFileInput(type="file" accept="image/*,video/*" style="display:none")
+            input#msgInput(type="text" placeholder="Type a message...")
+            button#sendBtn.icon-btn.send-btn(title="Send")
+              i.fa-solid.fa-paper-plane
+
+    //- == FAB Popup (Create/Join Group) ==
+    #fabPopupOverlay.modal-overlay(style="display:none")
+      .fab-popup-card
+        .modal-header
+          h3 New Group
+          button#fabPopupClose.icon-btn
+            i.fa-solid.fa-xmark
+        .fab-popup-body
+          .fab-option#fabCreateOption
+            i.fa-solid.fa-plus-circle.fab-option-icon
+            .fab-option-text
+              strong Create Group
+              span Start a new group conversation
+          .fab-option#fabJoinOption
+            i.fa-solid.fa-arrow-right-to-bracket.fab-option-icon
+            .fab-option-text
+              strong Join Group
+              span Join an existing group with a code
+
+    //- == Create Group Modal ==
+    #createGroupModal.modal-overlay(style="display:none")
+      .modal-card
+        .modal-header
+          h3 Create Group
+          button#createGroupClose.icon-btn
+            i.fa-solid.fa-xmark
+        .modal-body
+          .profile-field
+            label(for="createGroupNameInput") Group Name
+            input#createGroupNameInput(type="text" placeholder="Enter group name")
+        .modal-footer
+          button#createGroupSubmitBtn.btn.btn-primary.btn-sm(type="button") Create
+
+    //- == Join Group Modal ==
+    #joinGroupModal.modal-overlay(style="display:none")
+      .modal-card
+        .modal-header
+          h3 Join Group
+          button#joinGroupClose.icon-btn
+            i.fa-solid.fa-xmark
+        .modal-body
+          .profile-field
+            label(for="joinGroupNameInput") Group Name
+            input#joinGroupNameInput(type="text" placeholder="Group name")
+          .profile-field
+            label(for="joinGroupCodeInput") Invite Code
+            input#joinGroupCodeInput(type="text" placeholder="Enter invite code")
+        .modal-footer
+          button#joinGroupSubmitBtn.btn.btn-primary.btn-sm(type="button") Join
+
+    //- == Room FAB Popup (Create/Search Room) ==
+    #roomFabPopupOverlay.modal-overlay(style="display:none")
+      .fab-popup-card
+        .modal-header
+          h3 Room Actions
+          button#roomFabPopupClose.icon-btn
+            i.fa-solid.fa-xmark
+        .fab-popup-body
+          .fab-option#roomFabCreateOption
+            i.fa-solid.fa-plus-circle.fab-option-icon
+            .fab-option-text
+              strong Create Room
+              span Create a new public chat room
+          .fab-option#roomFabSearchOption
+            i.fa-solid.fa-magnifying-glass.fab-option-icon
+            .fab-option-text
+              strong Search Rooms
+              span Find and join rooms
+
+    //- == Create Room Modal ==
+    #createRoomModal.modal-overlay(style="display:none")
+      .modal-card
+        .modal-header
+          h3 Create Room
+          button#createRoomClose.icon-btn
+            i.fa-solid.fa-xmark
+        .modal-body
+          .profile-field
+            label(for="createRoomNameInput") Room Name
+            input#createRoomNameInput(type="text" placeholder="Enter room name")
+        .modal-footer
+          button#createRoomSubmitBtn.btn.btn-primary.btn-sm(type="button") Create
+
+    //- == Search Room Modal ==
+    #searchRoomModal.modal-overlay(style="display:none")
+      .modal-card
+        .modal-header
+          h3 Search Rooms
+          button#searchRoomClose.icon-btn
+            i.fa-solid.fa-xmark
+        .modal-body
+          .profile-field
+            label(for="searchRoomInput") Room Name
+            input#searchRoomInput(type="text" placeholder="Type room name and press Enter")
+          #searchRoomResults.conv-list
+
+    //- == OTP Confirmation Modal ==
+    #otpConfirmModal.modal-overlay(style="display:none")
+      .modal-card.otp-confirm-card
+        .modal-header
+          h3
+            i.fa-solid.fa-shield-halved
+            |  Confirm Sensitive Message
+          button#otpConfirmClose.icon-btn(type="button")
+            i.fa-solid.fa-xmark
+        .modal-body
+          p#otpConfirmText This message looks like an OTP (4 or 6 digits). Are you sure you want to send it to this group/room?
+        .modal-footer
+          button#otpConfirmCancel.btn.btn-outline.btn-sm(type="button") Cancel
+          button#otpConfirmProceed.btn.btn-danger.btn-sm(type="button") Send Anyway
+
+    //- == Action Confirmation Modal ==
+    #actionConfirmModal.modal-overlay(style="display:none")
+      .modal-card.action-confirm-card
+        .modal-header
+          h3
+            i.fa-solid.fa-circle-question
+            span#actionConfirmTitle Confirm Action
+          button#actionConfirmClose.icon-btn(type="button")
+            i.fa-solid.fa-xmark
+        .modal-body
+          p#actionConfirmText Are you sure?
+        .modal-footer
+          button#actionConfirmCancel.btn.btn-outline.btn-sm(type="button") Cancel
+          button#actionConfirmProceed.btn.btn-danger.btn-sm(type="button") Confirm
+
+    //- == Room list action modal ==
+    #roomListActionModal.modal-overlay(style="display:none")
+      .modal-card
+        .modal-header
+          h3#roomListActionTitle Room Action
+          button#roomListActionClose.icon-btn
+            i.fa-solid.fa-xmark
+        .modal-body
+          p#roomListActionText
+        .modal-footer
+          button#roomListRemoveBtn.btn.btn-danger.btn-sm(type="button") Remove from list
+          button#roomListDeleteBtn.btn.btn-danger.btn-sm(type="button" style="display:none") Delete Room Forever
+
+    //- == Room info modal ==
+    #roomInfoModal.modal-overlay(style="display:none")
+      .modal-card
+        .modal-header
+          h3#modalRoomName Room
+          button#roomInfoClose.icon-btn
+            i.fa-solid.fa-xmark
+        .modal-body
+          .group-avatar-center
+            span#modalRoomAvatar.avatar-xl.clickable-avatar(title="Click to view icon")
+            input#roomAvatarFile(type="file" accept="image/*" style="display:none")
+          p
+            strong Owner:&nbsp;
+            span#modalRoomOwner
+          //- == Moderation mode toggles (owner only) ==
+          #roomModeToggles(style="display:none")
+            .toggle-row
+              span.toggle-label Toxic Filter
+              label.toggle-switch
+                input#toggleToxicFilter(type="checkbox")
+                span.toggle-slider
+            .toggle-row
+              span.toggle-label Troll Mode
+              label.toggle-switch
+                input#toggleTrollMode(type="checkbox")
+                span.toggle-slider.toggle-slider-troll
+          p
+            strong Connected:&nbsp;
+            span#modalRoomOnline
+          .profile-field
+            label Description
+            p#modalRoomDesc.profile-text
+            textarea#modalRoomDescInput(rows="3" maxlength="200" placeholder="Edit room description..." style="display:none")
+            button#modalRoomDescSave.btn.btn-primary.btn-sm(type="button" style="display:none") Save Description
+          p
+            strong Admins:
+          #modalRoomAdmins
+          p
+            strong Online users:
+          #modalRoomOnlineUsers
+          p
+            strong Offline users:
+          #modalRoomMembers
+          #modalRoomBanned(style="display:none")
+          #roomTransferOwnership(style="display:none")
+          p(style="display:none")
+            strong Muted Users:
+          #modalRoomMuted
+        .modal-footer
+          button#roomDeleteBtn.btn.btn-danger.btn-sm(type="button" style="display:none") Delete Room Forever
+          button#roomPurgeBtn.btn.btn-danger.btn-sm(type="button") Purge Messages
+          button#roomLogsBtn.btn.btn-primary.btn-sm(type="button" style="display:none") Logs
+          button#leaveRoomBtn.btn.btn-outline.btn-sm(type="button") Leave Room
+
+    //- == Room moderation logs modal ==
+    #roomLogsModal.modal-overlay(style="display:none")
+      .modal-card
+        .modal-header
+          h3#roomLogsTitle Room Logs
+          button#roomLogsClose.icon-btn(type="button")
+            i.fa-solid.fa-xmark
+        .modal-body
+          #roomLogsList
+        .modal-footer
+          button#roomLogsClearBtn.btn.btn-danger.btn-sm(type="button") Clear Logs
+          button#roomLogsDoneBtn.btn.btn-outline.btn-sm(type="button") Close
+
+    //- == Group info modal ==
+    #groupInfoModal.modal-overlay(style="display:none")
+      .modal-card
+        .modal-header
+          h3#modalGroupName Group
+          button#groupInfoClose.icon-btn
+            i.fa-solid.fa-xmark
+        .modal-body
+          .group-avatar-center
+            span#modalGroupAvatar.avatar-xl.clickable-avatar(title="Click to view photo")
+            input#groupAvatarFile(type="file" accept="image/*" style="display:none")
+          p
+            strong Owner:&nbsp;
+            span#modalGroupOwner
+          p
+            strong Code:&nbsp;
+            code#modalGroupCode
+          .profile-field
+            label(for="modalGroupNameInput") Group Name
+            input#modalGroupNameInput(type="text" placeholder="Rename group" style="display:none")
+            button#modalGroupRenameSave.btn.btn-primary.btn-sm(type="button" style="display:none") Save Name
+          .profile-field
+            label Description
+            p#modalGroupDesc.profile-text
+            textarea#modalGroupDescInput(rows="3" maxlength="200" placeholder="Edit group description..." style="display:none")
+            button#modalGroupDescSave.btn.btn-primary.btn-sm(type="button" style="display:none") Save Description
+          p
+            strong Members:
+          #modalGroupMembers
+          #modalBannedUsers(style="display:none")
+          #modalPendingRequests(style="display:none")
+          #modalApprovalToggle(style="display:none")
+        .modal-footer
+          button#leaveGroupBtn.btn.btn-danger.btn-sm
+            i.fa-solid.fa-right-from-bracket
+            |  Leave Group
+
+    //- == User profile modal (Discord-style card) ==
+    #userProfileModal.modal-overlay(style="display:none")
+      .discord-profile-card
+        button#userProfileClose.dpc-close-btn
+          i.fa-solid.fa-xmark
+        .dpc-banner#userProfileBanner
+        .dpc-avatar-row
+          .dpc-avatar-wrap
+            span#userProfileAvatar.avatar-xl
+          .dpc-badges
+            span#userProfileStatusBadge.dpc-badge
+              i.fa-solid.fa-circle
+        .dpc-body
+          .dpc-name-row
+            h3#userProfileName User
+            span#userProfileStatus.status-pill
+          #userProfileAboutSection.dpc-section(style="display:none")
+            .dpc-section-title ABOUT ME
+            p#userProfileAbout.dpc-section-text
+          #userProfileGithubSection.dpc-section(style="display:none")
+            .dpc-section-title CONNECTIONS
+            a#userProfileGithubLink.dpc-connection(href="#" target="_blank")
+              i.fa-brands.fa-github
+              span#userProfileGithubName
+          .dpc-footer
+            button#userDmBlockBtn.btn.btn-danger.btn-sm(type="button" style="display:none") Block DM
+
+    //- == Profile settings modal ==
+    #profileModal.modal-overlay(style="display:none")
+      .modal-card
+        .modal-header
+          h3 Profile settings
+          button#profileClose.icon-btn
+            i.fa-solid.fa-xmark
+        .modal-body
+          .profile-row
+            span#profileAvatar.avatar-lg
+            .profile-actions
+              button#profileAvatarBtn.btn.btn-outline.btn-sm(type="button") Change photo
+              button#profileRemoveAvatarBtn.btn.btn-outline.btn-sm(type="button" style="display:none") Remove photo
+              input#profileAvatarInput(type="file" accept="image/*" style="display:none")
+          .profile-field
+            label(for="profileStatus") Status
+            select#profileStatus
+              option(value="online") Online
+              option(value="idle") Idle
+              option(value="dnd") Do not disturb
+              option(value="offline") Offline
+          .profile-field
+            label(for="profileAbout") About me
+            textarea#profileAbout(rows="4" maxlength="280" placeholder="Say something about you...")
+          .profile-field
+            button#setSequenceBtn.btn.btn-outline.btn-sm(type="button")
+              i.fa-solid.fa-key
+              |  Set Hidden Sequence
+        .modal-footer
+          button#profileSaveBtn.btn.btn-primary.btn-sm(type="button") Save changes
+
+    //- == Theme Settings Modal ==
+    #themeModal.modal-overlay(style="display:none")
+      .modal-card.theme-modal-card
+        .modal-header
+          h3 Settings
+          button#themeClose.icon-btn
+            i.fa-solid.fa-xmark
+        .modal-body
+          h4.theme-section-title Choose Theme
+          .theme-grid
+            .theme-card(data-theme="dark")
+              .theme-preview.tp-dark
+              span Dark
+            .theme-card(data-theme="light")
+              .theme-preview.tp-light
+              span Light
+            .theme-card(data-theme="midnight")
+              .theme-preview.tp-midnight
+              span Midnight
+            .theme-card(data-theme="forest")
+              .theme-preview.tp-forest
+              span Forest
+            .theme-card(data-theme="sunset")
+              .theme-preview.tp-sunset
+              span Sunset
+            .theme-card(data-theme="ocean")
+              .theme-preview.tp-ocean
+              span Ocean
+            .theme-card(data-theme="amoled")
+              .theme-preview.tp-amoled
+              span AMOLED
+            .theme-card(data-theme="rose")
+              .theme-preview.tp-rose
+              span Rose
+            .theme-card(data-theme="nord")
+              .theme-preview.tp-nord
+              span Nord
+            .theme-card(data-theme="dracula")
+              .theme-preview.tp-dracula
+              span Dracula
+            .theme-card(data-theme="solarized")
+              .theme-preview.tp-solarized
+              span Solarized
+            .theme-card(data-theme="cyberpunk")
+              .theme-preview.tp-cyberpunk
+              span Cyberpunk
+            .theme-card(data-theme="neon-mint")
+              .theme-preview.tp-neon-mint
+              span Neon Mint
+            .theme-card(data-theme="sakura")
+              .theme-preview.tp-sakura
+              span Sakura
+            .theme-card(data-theme="electric")
+              .theme-preview.tp-electric
+              span Electric
+            .theme-card(data-theme="latte")
+              .theme-preview.tp-latte
+              span Latte
+            .theme-card(data-theme="synthwave")
+              .theme-preview.tp-synthwave
+              span Synthwave
+            .theme-card(data-theme="terminal")
+              .theme-preview.tp-terminal
+              span Terminal
+            .theme-card(data-theme="royal")
+              .theme-preview.tp-royal
+              span Royal
+            .theme-card(data-theme="coffee")
+              .theme-preview.tp-coffee
+              span Coffee
+            .theme-card(data-theme="gruvbox")
+              .theme-preview.tp-gruvbox
+              span Gruvbox
+            .theme-card(data-theme="lavender")
+              .theme-preview.tp-lavender
+              span Lavender
+            .theme-card(data-theme="glacier")
+              .theme-preview.tp-glacier
+              span Glacier
+
+    //- == Create Post Modal ==
+    #createPostModal.modal-overlay(style="display:none")
+      .modal-card
+        .modal-header
+          h3 Create Post
+          button#createPostClose.icon-btn
+            i.fa-solid.fa-xmark
+        .modal-body
+          .profile-field
+            label What's on your mind?
+            textarea#createPostText(rows="4" maxlength="1000" placeholder="Write something...")
+          .profile-field
+            label.chat-toggle
+              input#createPostSpoilerText(type="checkbox")
+              span Mark post text as spoiler
+          .profile-field
+            label Attach a photo (optional)
+            input#createPostPhoto(type="file" accept="image/*")
+            label.chat-toggle
+              input#createPostSpoilerMedia(type="checkbox")
+              span Mark image as spoiler
+            #createPostPreview(style="display:none")
+              img#createPostPreviewImg
+              button#createPostCancelPreview.icon-btn
+                i.fa-solid.fa-xmark
+        .modal-footer
+          button#createPostSubmitBtn.btn.btn-primary.btn-sm(type="button")
+            i.fa-solid.fa-paper-plane
+            |  Post
+
+    //- == Hidden Sequence Modal ==
+    #hiddenSequenceModal.modal-overlay(style="display:none")
+      .modal-card.hidden-seq-card
+        .modal-header
+          h3
+            i.fa-solid.fa-key
+            |  Set Hidden Sequence
+          button#hiddenSequenceClose.icon-btn
+            i.fa-solid.fa-xmark
+        .modal-body
+          p Set a secret key sequence (like the Konami code). Press keys including arrows, letters, numbers — then type that sequence anywhere to toggle your hidden chats tab.
+          .profile-field
+            label Key Sequence
+            #hiddenSequenceRecorder.hidden-seq-recorder(tabindex="0")
+              span.hidden-seq-recorder-placeholder Press keys here to record...
+          .hidden-seq-display#hiddenSequenceDisplay.empty No sequence set
+          .hidden-seq-hint Type this exact key sequence (outside any input box) to reveal/hide the Hidden tab.
+        .modal-footer
+          button#hiddenSequenceClear.btn.btn-outline.btn-sm(type="button") Clear
+          button#hiddenSequenceSave.btn.btn-primary.btn-sm(type="button") Save
+
+    //- == Conv hide context menu ==
+    #convHideCtxMenu
+      .ctx-item#ctxToggleHideConv
+        i.fa-solid.fa-eye-slash
+        |  Hide Chat
+
+    //- == Message context menu ==
+    #msgContextMenu
+      .ctx-item#ctxDeleteForMe
+        i.fa-solid.fa-eye-slash
+        | Delete for me
+      .ctx-item.danger#ctxDeleteForEveryone
+        i.fa-solid.fa-trash
+        | Delete for everyone
+
+    //- == Room member context menu ==
+    #roomMemberCtxMenu
+
+    //- == Room mute duration modal ==
+    #roomMuteDurationModal.modal-overlay(style="display:none")
+      .modal-card
+        .modal-header
+          h3 Mute user
+          button#roomMuteDurationClose.icon-btn(type="button")
+            i.fa-solid.fa-xmark
+        .modal-body
+          p#roomMuteDurationTarget
+          .profile-field
+            label(for="roomMuteDurationRange") Mute duration
+            input#roomMuteDurationRange(type="range" min="1" max="121" step="1" value="15")
+            .mute-duration-readout
+              span#roomMuteDurationValue 15 minutes
+        .modal-footer
+          button#roomMuteDurationCancel.btn.btn-outline.btn-sm(type="button") Cancel
+          button#roomMuteDurationConfirm.btn.btn-primary.btn-sm(type="button") Mute
+
+    //- == Full-screen typing mode ==
+    #typingArena(style="display:none")
+      .typing-arena-inner
+        //- Live stats bar
+        .typing-live-bar
+          .typing-live-stat
+            .typing-live-value#typingWpm 0
+            .typing-live-label wpm
+          .typing-live-stat
+            .typing-live-value#typingAcc 100
+            .typing-live-label accuracy
+          .typing-live-stat.typing-live-timer
+            .typing-live-value#typingTime 30
+            .typing-live-label time
+
+        //- Duration & config row
+        .typing-config-bar
+          button.typing-dur-btn.active(data-dur="15") 15
+          button.typing-dur-btn(data-dur="30") 30
+          button.typing-dur-btn(data-dur="60") 60
+          span.typing-config-sep
+          span.typing-config-label
+            i.fa-solid.fa-globe
+            |  english
+
+        //- Test view (words)
+        #typingTestView
+          #typingWords(tabindex="0")
+          input#typingHiddenInput(type="text" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false")
+
+        //- Result view (shown after test)
+        #typingResultView(style="display:none")
+          .typing-result-hero
+            .typing-result-big.typing-result-wpm
+              .typing-result-big-value#typingResultWpm 0
+              .typing-result-big-label wpm
+            .typing-result-big.typing-result-acc
+              .typing-result-big-value#typingResultAcc 100%
+              .typing-result-big-label accuracy
+          .typing-result-graph
+            canvas#typingGraph(height="180")
+          .typing-result-grid
+            .typing-result-stat
+              .typing-result-stat-value#typingResultType time 30
+              .typing-result-stat-label test type
+            .typing-result-stat
+              .typing-result-stat-value#typingResultRaw 0
+              .typing-result-stat-label raw wpm
+            .typing-result-stat
+              .typing-result-stat-value#typingResultChars -
+              .typing-result-stat-label characters
+            .typing-result-stat
+              .typing-result-stat-value#typingResultConsistency 100%
+              .typing-result-stat-label consistency
+            .typing-result-stat
+              .typing-result-stat-value#typingResultTime 30s
+              .typing-result-stat-label time
+
+        //- Bottom actions
+        .typing-arena-bottom
+          button#typingRestartBtn.typing-action-btn(type="button" title="Restart test")
+            i.fa-solid.fa-rotate-right
+          button#typingCloseBtn.typing-action-btn(type="button" title="Close typing mode")
+            i.fa-solid.fa-xmark
+
+    //- == Image lightbox ==
+    #lightbox.modal-overlay(style="display:none")
+      .lightbox-wrap
+        button#lightboxClose.icon-btn.lightbox-x
+          i.fa-solid.fa-xmark
+        img#lightboxImg
+        video#lightboxVideo(controls playsinline style="display:none")
+        .lightbox-actions(style="display:none")
+          button#lightboxChange.btn.btn-outline.btn-sm(type="button")
+            i.fa-solid.fa-camera
+            |  Change Photo
+          button#lightboxDelete.btn.btn-danger.btn-sm(type="button")
+            i.fa-solid.fa-trash
+            |  Delete Photo
+
+    //- == Moderation toast ==
+    #moderationToast.moderation-toast
+
+    //- == Moderation warning popup ==
+    #moderationWarningModal.modal-overlay(style="display:none")
+      .modal-card
+        .modal-header
+          h3
+            i.fa-solid.fa-triangle-exclamation
+            |  Warning Issued
+          button#moderationWarningClose.icon-btn(type="button")
+            i.fa-solid.fa-xmark
+        .modal-body
+          p#moderationWarningText
+        .modal-footer
+          button#moderationWarningAcknowledge.btn.btn-primary.btn-sm(type="button") I Understand
+
+    script(src="/app.js")
