@@ -1,6 +1,6 @@
 <div align="center">
 
-# 🐇 BunChat 
+# 🍔BunChat 
 
 ![Node.js](https://img.shields.io/badge/Node.js-43853D?style=flat-square&logo=node.js&logoColor=white)
 ![Python](https://img.shields.io/badge/Python-3776AB?style=flat-square&logo=python&logoColor=white)
@@ -15,9 +15,11 @@
 
 ### 🎥 Web App Preview
 
-> <video src="./preview/BunChat_Demo.mp4" controls="controls" style="max-width: 100%;">
-  Your browser does not support the video tag.
+<video controls width="100%">
+  <source src="./preview/BunChat_Demo.mp4" type="video/mp4">
 </video>
+
+> ⚠️ **Note:** If your local Markdown previewer does not support video playback, **[click here to view the BunChat_Demo.mp4](./preview/BunChat_Demo.mp4)**. (The video player will render automatically once pushed to GitHub).
 
 </div>
 
