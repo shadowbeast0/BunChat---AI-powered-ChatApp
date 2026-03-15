@@ -15,9 +15,7 @@
 
 ### 🎥 Web App Preview
 
-<video controls width="100%">
-  <source src="./preview/BunChat_Demo.mp4" type="video/mp4">
-</video>
+![BunChat Demo](./preview/BunChat_short_gif.gif)
 
 > ⚠️ **Note:** If your local Markdown previewer does not support video playback, **[click here to view the BunChat_Demo.mp4](./preview/BunChat_Demo.mp4)**. (The video player will render automatically once pushed to GitHub).
 
