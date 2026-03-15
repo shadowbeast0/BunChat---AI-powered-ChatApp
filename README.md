@@ -14,9 +14,10 @@
 ---
 
 ### 🎥 Web App Preview
-> *Drop your recorded MP4 or GIF here to show off the workflow!*
-> 
-> `[PASTE_DEMO_VIDEO_OR_GIF_LINK_HERE]`
+
+> <video src="./preview/BunChat_Demo.mp4" controls="controls" style="max-width: 100%;">
+  Your browser does not support the video tag.
+</video>
 
 </div>
 
